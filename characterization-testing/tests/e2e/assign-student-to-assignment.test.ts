@@ -11,12 +11,15 @@ import type {
 import { app, Errors } from '../../src';
 import {
   resetDatabase,
-  ClassRoomBuilder,
-  StudentBuilder,
+  aClassRoom,
+  aStudent,
+  aStudentAssignment,
+  anAssignment,
+  anEnrolledStudent,
 } from '../fixtures';
-import { StudentEnrollmentBuilder } from '../fixtures/student-enrollment-builder';
+import type { ClassRoomBuilder } from '../fixtures/class-room-builder';
 import { AssignmentBuilder } from '../fixtures/assignment-builder';
-import { StudentAssignmentBuilder } from '../fixtures/student-assignment-builder';
+import { StudentEnrollmentBuilder } from '../fixtures/student-enrollment-builder';
 
 const feature = loadFeature(
   path.join(
@@ -42,23 +45,16 @@ defineFeature(feature, (test) => {
     let student: Student;
     let assignment: Assignment;
 
-    let aClassRoom: ClassRoomBuilder;
+    let aClass: ClassRoomBuilder = aClassRoom();
 
     given(
       'there is an existing student enrolled to a class',
       async () => {
-        aClassRoom = new ClassRoomBuilder();
-        const classRoomBuilder = aClassRoom.withName('Math');
-
-        const aStudent = new StudentBuilder();
-        const studentBuilder = aStudent
-          .withName('omar')
-          .withEmail('omar@gmail.com');
-
-        const anEnrolledStudent = new StudentEnrollmentBuilder();
-        const enrolledStudent = await anEnrolledStudent
-          .from(classRoomBuilder)
-          .and(studentBuilder)
+        const enrolledStudent = await anEnrolledStudent()
+          .from(aClass)
+          .and(
+            aStudent().withName('omar').withEmail('omar@gmail.com'),
+          )
           .build();
 
         student = enrolledStudent.student;
@@ -66,11 +62,8 @@ defineFeature(feature, (test) => {
     );
 
     and('an assignment exists for a class', async () => {
-      const classRoomBuilder = aClassRoom.withName('Math');
-
-      const anAssignment = new AssignmentBuilder();
-      const assignmentResult = await anAssignment
-        .from(classRoomBuilder)
+      const assignmentResult = await anAssignment()
+        .from(aClass)
         .build();
 
       assignment = assignmentResult;
@@ -112,11 +105,8 @@ defineFeature(feature, (test) => {
     given('a student does not exist', () => {});
 
     and('an assignment exists for a class', async () => {
-      const classRoomBuilder = new ClassRoomBuilder();
-
-      const anAssignment = new AssignmentBuilder();
-      const assignmentResult = await anAssignment
-        .from(classRoomBuilder)
+      const assignmentResult = await anAssignment()
+        .from(aClassRoom())
         .build();
 
       assignment = assignmentResult;
@@ -153,14 +143,9 @@ defineFeature(feature, (test) => {
     given(
       'there is an existing student enrolled to a class',
       async () => {
-        const studentBuilder = new StudentBuilder();
-        const classRoomBuilder = new ClassRoomBuilder();
-
-        const studentEnrollmentBuilder =
-          new StudentEnrollmentBuilder();
-        const enrolledStudent = await studentEnrollmentBuilder
-          .from(classRoomBuilder)
-          .and(studentBuilder)
+        const enrolledStudent = await anEnrolledStudent()
+          .from(aClassRoom())
+          .and(aStudent())
           .build();
 
         student = enrolledStudent.student;
@@ -201,15 +186,12 @@ defineFeature(feature, (test) => {
     given(
       'there is an existing student that is not enrolled to a class',
       async () => {
-        const studentResult = await new StudentBuilder().build();
-        student = studentResult;
+        student = await aStudent().build();
       },
     );
 
     and('an assignment exists for a class', async () => {
-      const classRoomBuilder = new ClassRoomBuilder();
-      const anAssignment = new AssignmentBuilder();
-      assignment = await anAssignment.from(classRoomBuilder).build();
+      assignment = await anAssignment().from(aClassRoom()).build();
     });
 
     when('i assign the student the assignment', async () => {
@@ -240,35 +222,29 @@ defineFeature(feature, (test) => {
 
     let studentAssignment: StudentAssignment;
 
-    let classRoomBuilder: ClassRoomBuilder;
-    let assignmentBuilder: AssignmentBuilder;
-    let studentEnrollmentBuilder: StudentEnrollmentBuilder;
+    let theClassRoom: ClassRoomBuilder = aClassRoom();
+    let theAssignment: AssignmentBuilder;
+    let theEnrolledStudent: StudentEnrollmentBuilder;
 
     given(
       'there is an existing student enrolled to a class',
       async () => {
-        classRoomBuilder = new ClassRoomBuilder();
-        const studentBuilder = new StudentBuilder();
-
-        const anEnrolledStudent = new StudentEnrollmentBuilder();
-        studentEnrollmentBuilder = anEnrolledStudent
-          .from(classRoomBuilder)
-          .and(studentBuilder);
+        theEnrolledStudent = anEnrolledStudent()
+          .from(theClassRoom)
+          .and(aStudent());
       },
     );
 
     and('an assignment exists for a class', async () => {
-      const anAssignment = new AssignmentBuilder();
-      assignmentBuilder = anAssignment.from(classRoomBuilder);
+      theAssignment = anAssignment().from(theClassRoom);
     });
 
     and(
       'the student is already assigned to the assignment',
       async () => {
-        const astudentAssignment = new StudentAssignmentBuilder();
-        studentAssignment = await astudentAssignment
-          .from(studentEnrollmentBuilder)
-          .and(assignmentBuilder)
+        studentAssignment = await aStudentAssignment()
+          .from(theEnrolledStudent)
+          .and(theAssignment)
           .build();
       },
     );
