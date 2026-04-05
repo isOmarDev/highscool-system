@@ -1,311 +1,228 @@
-# High School Management System
+# Characterization Testing for High School System
 
-A 4-tier backend system for managing high school operations. This system handles student management, class enrollments, assignments, grading, and report card generation with a clean, scalable architecture.
+This project demonstrates best practices for characterization testing in a high school management system. It focuses on creating robust, maintainable tests using builders for test data creation and ensuring idempotent test execution.
 
-## 📋 Table of Contents
+## Overview
 
-- [Project Description](#project-description)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Folder Structure](#folder-structure)
-- [Setup Instructions](#setup-instructions)
-- [Environment Variables](#environment-variables)
-- [Available Scripts](#available-scripts)
-- [Database Schema](#database-schema)
+Characterization tests capture the current behavior of a system, serving as a safety net during refactoring or when working with legacy code. This project showcases:
 
-## 📝 Project Description
+- **Characterization Tests**: Tests that document and verify existing system behavior
+- **Test Data Builders**: Fluent APIs for creating complex test fixtures
+- **Idempotent Tests**: Tests that can run multiple times without side effects
 
-The High School Management System is a backend API built with Node.js and TypeScript that provides a robust solution for educational institutions to manage:
+## Architecture
 
-- **Student Information**: Create and manage student records
-- **Class Management**: Organize classes and define curricula
-- **Enrollment**: Track student enrollment in classes
-- **Assignments**: Create and distribute assignments to students
-- **Grading**: Record grades and track assignment completion status
-- **Report Cards**: Generate comprehensive report cards for students
-- **Grade Reports**: Aggregate grades at the class level
+The system models a high school environment with:
 
-The system follows SOLID principles with a 4-tier architecture (Controllers → Services → Persistence → Database) ensuring maintainability, testability, and scalability.
+- Students enrolled in classes
+- Assignments given to classes
+- Student submissions and grading
+- Report cards and grade reports
 
-## ✨ Features
+### Database Schema
 
-- ✅ RESTful API with Express.js
-- ✅ Type-safe database operations with Prisma ORM
-- ✅ PostgreSQL database with full migration support
-- ✅ Comprehensive error handling and validation
-- ✅ Data Transfer Objects (DTOs) for request/response handling
-- ✅ Database seeding capabilities
-- ✅ Jest testing framework configured
-- ✅ Development mode with hot-reload (Nodemon)
-- ✅ TypeScript for type safety
-- ✅ CORS support for cross-origin requests
+Built with Prisma and PostgreSQL, featuring:
 
-## 🛠 Tech Stack
+- Student management
+- Class enrollment
+- Assignment tracking
+- Submission and grading workflows
+- Report generation
 
-| Layer           | Technology | Version |
-| --------------- | ---------- | ------- |
-| **Runtime**     | Node.js    | 18+     |
-| **Language**    | TypeScript | ^5.9.3  |
-| **Framework**   | Express.js | ^5.2.1  |
-| **ORM**         | Prisma     | ^7.3.0  |
-| **Database**    | PostgreSQL | 12+     |
-| **Testing**     | Jest       | ^30.2.0 |
-| **Development** | Nodemon    | ^3.1.11 |
+## Testing Strategy
 
-### Key Dependencies
+### Characterization Tests
 
-- **@prisma/client**: Type-safe database client
-- **@prisma/adapter-pg**: PostgreSQL adapter for Prisma
-- **pg**: PostgreSQL driver for Node.js
-- **cors**: Cross-Origin Resource Sharing middleware
-- **dotenv**: Environment variable management
-- **rimraf**: Cross-platform file/folder deletion
+Located in `tests/e2e/`, these tests use Cucumber (via jest-cucumber) to define behavior in plain English while capturing the current API responses and database state.
 
-## 📁 Folder Structure
+Example test structure:
 
 ```
-highschool-system-4tier/
-├── src/
-│   ├── index.ts                 # Application entry point
-│   ├── server.ts                # Express server configuration
-│   ├── bootstrap.ts             # Application initialization
-│   ├── database.ts              # Database connection setup
-│   ├── controllers/             # Request handlers
-│   │   ├── studentController.ts
-│   │   ├── classController.ts
-│   │   ├── classEnrollmentController.ts
-│   │   ├── assignmentController.ts
-│   │   └── studentAssignmentController.ts
-│   ├── services/                # Business logic layer
-│   │   └── assignmentsService.ts
-│   ├── persistence/             # Data access layer
-│   │   └── assignmentDatabase.ts
-│   ├── routes/                  # API route definitions
-│   │   ├── studentRoutes.ts
-│   │   ├── classRoutes.ts
-│   │   ├── classEnrollmentRoutes.ts
-│   │   ├── assignmentRoutes.ts
-│   │   └── studentAssignmentRoutes.ts
-│   ├── dtos/                    # Data Transfer Objects
-│   │   ├── createAssignmentDTO.ts
-│   │   └── getAssignmentByIdDTO.ts
-│   └── shared/                  # Shared utilities and helpers
-│       ├── errorExceptionHandler.ts
-│       ├── errorExceptionTypes.ts
-│       ├── exceptions.ts
-│       └── helpers.ts
-├── prisma/
-│   ├── schema.prisma            # Database schema definition
-│   ├── seed.ts                  # Database seeding script
-│   └── migrations/              # Database migrations
-│       ├── 20260210112915_init/
-│       └── 20260210144449_add_student_class_class_enrollment_assignment_student_assignment_report_card/
-├── generated/
-│   └── prisma/                  # Auto-generated Prisma client and types
-├── build/                       # Compiled JavaScript output
-├── package.json                 # Project dependencies
-├── tsconfig.json                # TypeScript configuration
-├── nodemon.json                 # Nodemon configuration
-└── README.md                    # This file
+Feature: Create Student
+  Scenario: Successfully create a student
+    Given I want to create a student with name "John Doe" and email "john@example.com"
+    When I send a request to create a student
+    Then the new student record should be created successfully
 ```
 
-### Architecture Layer Breakdown
+### Test Data Builders
 
-- **Controllers**: Handle HTTP requests, parse input, call services, and return responses
-- **Services**: Contain business logic and orchestrate database operations
-- **Persistence**: Data access layer handling direct database queries
-- **Database**: Schema definition and migrations managed by Prisma
+Located in `tests/fixtures/`, builders provide a fluent interface for creating test data:
 
-## 🚀 Setup Instructions
+```typescript
+const student = await new StudentBuilder()
+  .withName('Jane Smith')
+  .withEmail('jane@example.com')
+  .build();
+```
+
+Builders use Prisma's upsert operations to ensure idempotent data creation.
+
+### Idempotent Test Execution
+
+Each test runs in isolation:
+
+- Database is reset before each test (`afterEach` hook)
+- Builders create fresh data for each test scenario
+- No test dependencies or shared state
+
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js**: v18 or higher
-- **npm** or **yarn**: Package manager
-- **PostgreSQL**: v12 or higher installed and running
+- Node.js 18+
+- PostgreSQL database
+- npm or yarn
 
-### Installation Steps
+### Installation
 
-1. **Clone the repository** (if applicable)
-
-   ```bash
-   git clone <repository-url>
-   cd highschool-system-4tier
-   ```
-
-2. **Install dependencies**
+1. Clone the repository
+2. Install dependencies:
 
    ```bash
    npm install
    ```
 
-3. **Create environment file**
+3. Set up environment variables:
+   Create a `.env` file with your database connection string:
 
-   ```bash
-   cp .env.example .env
+   ```
+   DATABASE_URL="postgresql://username:password@localhost:5432/highschool_test"
    ```
 
-   Update `.env` with your configuration (see [Environment Variables](#environment-variables))
-
-4. **Setup the database**
+4. Set up the database:
 
    ```bash
    npm run db:setup
    ```
 
-   This command will:
-   - Run all pending migrations
-   - Generate Prisma client types
-   - Seed the database with initial data
+   This will:
+   - Run migrations
+   - Generate Prisma client
+   - Seed initial data
 
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
-   The server will start on the configured port (default: 3000) with hot-reload enabled.
+### Running Tests
 
-### Alternative Database Setup Commands
+#### All Tests
 
 ```bash
-# Run migrations only
-npm run db:migrate
+npm test
+```
 
-# Generate Prisma client (after schema changes)
-npm run db:generate
+#### End-to-End Tests Only
 
-# Seed database
-npm run db:seed
+```bash
+npm run test:e2e
+```
 
-# Reset database (⚠️ clears all data)
-npm run db:reset
+#### Watch Mode (for development)
 
-# Reset and reseed database
-npm run db:reset:seed
+```bash
+npm run test:dev
+```
 
-# Open Prisma Studio for visual database management
+### Database Management
+
+#### View Database
+
+```bash
 npm run db:studio
 ```
 
-## 🔐 Environment Variables
-
-Create a `.env` file in the project root with the following variables:
-
-```env
-# Database Configuration
-DATABASE_URL="postgresql://username:password@localhost:5432/highschool_db"
-
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-
-# CORS Configuration (optional)
-CORS_ORIGIN=*
-
-# Optional: Prisma logging
-PRISMA_LOG_QUERIES=false
-```
-
-### Variable Descriptions
-
-| Variable             | Description                  | Example                                        | Required |
-| -------------------- | ---------------------------- | ---------------------------------------------- | -------- |
-| `DATABASE_URL`       | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/dbname` | ✅ Yes   |
-| `PORT`               | Server port                  | `3000`                                         | ✅ Yes   |
-| `NODE_ENV`           | Environment mode             | `development`, `production`                    | ✅ Yes   |
-| `CORS_ORIGIN`        | Allowed CORS origins         | `http://localhost:3000` or `*`                 | ❌ No    |
-| `PRISMA_LOG_QUERIES` | Enable Prisma query logging  | `true`, `false`                                | ❌ No    |
-
-### PostgreSQL Connection String Format
-
-```
-postgresql://[username][:password]@[host][:port]/[database]
-```
-
-**Example**:
-
-```env
-DATABASE_URL="postgresql://postgres:mypassword@localhost:5432/highschool_db"
-```
-
-## 📜 Available Scripts
+#### Reset Database
 
 ```bash
-# Development
-npm run dev              # Start development server with hot-reload
-npm run build            # Compile TypeScript to JavaScript
-
-# Database Management
-npm run db:generate      # Generate Prisma client
-npm run db:migrate       # Run pending migrations
-npm run db:migrate:seed  # Run migrations and seed
-npm run db:sync          # Run migrations and generate client
-npm run db:setup         # Full setup (migrate + generate + seed)
-npm run db:seed          # Run seed script
-npm run db:reset         # Reset database
-npm run db:reset:seed    # Reset and reseed database
-npm run db:studio        # Open Prisma Studio UI
-
-# Production
-npm start                # Build and run application
-
-# Testing
-jest                     # Run tests (Jest configured)
+npm run db:reset
 ```
 
-## 🗄 Database Schema
-
-### Entity Relationship Overview
-
-```
-Student (1) ──── (M) ClassEnrollment ──── (1) Class
-  │
-  ├──────── (1) ReportCard
-  │
-  └──────── (M) StudentAssignment ──── (1) Assignment ──── (1) Class
-                                                             │
-                                                       └──── (1) ClassGradeReport
-```
-
-### Main Entities
-
-- **Student**: Contains student information (id, name)
-- **Class**: Educational classes (id, name)
-- **ClassEnrollment**: Junction table linking students to classes
-- **Assignment**: Assignments created for classes (id, classId, title)
-- **StudentAssignment**: Tracks student progress on assignments (grade, status)
-- **ReportCard**: Student report cards (id, studentId)
-- **ClassGradeReport**: Aggregated grades for classes (id, classId)
-
-## 🧪 Testing
-
-The project is configured with Jest for unit testing:
+#### Run Migrations
 
 ```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm test -- --watch
-
-# Run tests with coverage
-npm test -- --coverage
+npm run db:migrate
 ```
 
-## 🤝 Contributing
+### Development
 
-When contributing to this project:
+#### Start Development Server
 
-1. Follow the established 4-tier architecture pattern
-2. Create appropriate DTOs for new endpoints
-3. Add error handling using the shared exception utilities
-4. Write tests for new features
-5. Update the database schema in `prisma/schema.prisma` for any data changes
-6. Run `npm run db:generate` after schema changes
+```bash
+npm run dev
+```
 
-## 📄 License
+#### Build Project
 
-ISC
+```bash
+npm run build
+```
 
----
+#### Start Production Server
 
-**Last Updated**: February 2026
+```bash
+npm start
+```
+
+## Project Structure
+
+```
+├── src/                    # Application source code
+│   ├── database.ts        # Prisma client setup
+│   └── index.ts           # Express server
+├── prisma/                # Database schema and migrations
+│   ├── schema.prisma      # Prisma schema definition
+│   ├── seed.ts           # Database seeding script
+│   └── migrations/        # Migration files
+├── tests/                 # Test suite
+│   ├── setup.ts          # Jest global setup
+│   ├── e2e/              # End-to-end characterization tests
+│   ├── features/         # Cucumber feature files
+│   └── fixtures/         # Test data builders and utilities
+├── generated/             # Generated Prisma client
+└── package.json          # Project dependencies and scripts
+```
+
+## Key Concepts
+
+### Characterization Testing
+
+Characterization tests document what the system currently does, not what it should do. They help:
+
+- Understand existing behavior
+- Prevent regressions during refactoring
+- Build confidence when modifying code
+
+### Builder Pattern for Test Data
+
+Builders provide:
+
+- Fluent, readable test data creation
+- Default values with customization options
+- Idempotent operations (safe to run multiple times)
+- Complex object relationships
+
+### Idempotent Tests
+
+Tests are designed to:
+
+- Run in any order
+- Not depend on other tests
+- Leave the system in a clean state
+- Be repeatable without side effects
+
+## Contributing
+
+When adding new features:
+
+1. Create characterization tests first to capture current behavior
+2. Use builders for test data creation
+3. Ensure tests are idempotent
+4. Update this README if the testing approach changes
+
+## Technologies Used
+
+- **Node.js** - Runtime environment
+- **Express** - Web framework
+- **Prisma** - Database ORM
+- **PostgreSQL** - Database
+- **Jest** - Testing framework
+- **jest-cucumber** - BDD testing
+- **Faker.js** - Test data generation
